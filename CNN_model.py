@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.feature_extraction.text import TfidfVectorizer
-from Recommend import convertDescriptions, loadData
 
 
 class CNNModel(nn.Module):
@@ -15,7 +13,7 @@ class CNNModel(nn.Module):
 
         #Puts everything in convultional layer
         self.convs = nn.ModuleList([
-            nn.Conv1d(in_channels=dimension, out_channels=numFilters, kernel_size=f)
+            nn.Conv1d(in_channels=dimension, out_channels=numFilters, kernel_size=f, padding = f//2)
             for f in filterSize
         ])
 
@@ -23,7 +21,7 @@ class CNNModel(nn.Module):
 
     #Passing the TF-IDF embedding Looks for the pattern in input data from the Convolutional Layers
     def forward (self,x):
-        x = x.unsqueeze(1)
+        x = x.unsqueeze(1).transpose(1,2)
         
         #Apply ReLu activation to each layer
         conv_results = [torch.relu(conv(x)).max(dim=2)[0] for conv in self.convs]
@@ -32,27 +30,19 @@ class CNNModel(nn.Module):
         return x        
     
 
-    def train_cnn(description_embeddings):
-        dimension = description_embeddings.shape[1]
-        numFilters = 50
-        filterSize = [3,4,5]
+def train_cnn(description_embeddings):
+    dimension = description_embeddings.shape[1]
+    numFilters = 50
+    filterSize = [3,4,5]
 
-        model = CNNModel(dimension, numFilters, filterSize)
+    model = CNNModel(dimension, numFilters, filterSize)
 
-        #Optimizer and Loss Function (Mean Square Error - Used to predict continuous values from the embeddings)
-        optimizer = optim.Adam(model.parameters(), lr = 1e-3)
-        loss = nn.MSELoss()
+    #Optimizer and Loss Function (Mean Square Error - Used to predict continuous values from the embeddings)
+    optimizer = optim.Adam(model.parameters(), lr = 1e-3)
+    loss = nn.MSELoss()
 
-        #Embeddings to Tensor through the model
-        tensor = torch.tensor(description_embeddings, dtype = torch.float32) 
-        description_features = CNNModel(tensor)
+    #Embeddings to Tensor through the model
+    tensor = description_embeddings.clone().detach().float()
+    description_features = model(tensor)
 
-        return model, description_features
-
-
-if __name__ == '__main__':
-    menu_data, _ = loadData()
-    descriptions_embeddings = convertDescriptions()
-
-    model, description_features = train_cnn(descriptions_embeddings)
-    torch.save(CNNModel.state_dict(), 'cnnModel.pth')
+    return model, description_features

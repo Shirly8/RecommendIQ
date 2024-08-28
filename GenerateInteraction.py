@@ -26,7 +26,7 @@ def generateInteraction(filename):
 
                 if randomfood not in reviewed_items:
                     randomrating = random.randint(1,5)
-                    writer.writerow([customer +1, randomfood, randomrating])
+                    writer.writerow([customer+1, randomfood, randomrating])
                     reviewed_items.add(randomfood)
 
             print(f"Customer {customer+1} - {reviewed_items}")
