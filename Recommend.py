@@ -1,19 +1,28 @@
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity 
 from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 menu_data = pd.read_csv('Menu.csv')
 user_data = pd.read_csv('user_data.csv')
 num_users = user_data['User_ID'].nunique()
-num_items = menu_data['Item_Id'].nunique()
+num_items = menu_data['Item_ID'].nunique()
 
-#STEP 1: COLLABORATIVE FILTERING
-def collaborativeFiltering():
-    sparsity = 1 - ((len(user_data))/(num_users*num_items))
-    print(f"Sparsity: {sparsity}")
+def loadData():
+    return menu_data, user_data
 
-    #Split dataset
-    trainData, testData = train_test_split(user_data)
-    #Find cosine similarity ()
-if __name__ == '__main__':
-    collaborativeFiltering()
+
+#Raw Text into numerical vectors (embeddings) for CNN then converted to TF-IDF embeddings
+def convertDescriptions():
+    descriptions = menu_data['Description'].tolist()
+    vectorizer = TfidfVectorizer()
+    descriptions_embeddings = vectorizer.fit_transform(descriptions).toarray()
+    return descriptions_embeddings
+
+#Categories: One-hot encoding into binary columns
+def convertCategories():
+    item_categories = menu_data[['Item_Id', 'Category']].copy()
+    item_categories = pd.get_dummies(item_categories, columns=['Category'])
+    return item_categories
+
+
