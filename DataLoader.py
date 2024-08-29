@@ -19,8 +19,7 @@ def convertDescriptions(menu_data):
     vectorizer = TfidfVectorizer()
     descriptions_embeddings = vectorizer.fit_transform(descriptions).toarray()
     tensor = torch.tensor(descriptions_embeddings, dtype = torch.float32)
-    print(f"DESCRIPTION TENSOR: {tensor}\n\n")
-    return tensor
+    return tensor   #tensor([[0.0000, 0.0000, 0.0000,  ..., 0.0000, 0.0000, 0.0000],
 
 
 
@@ -31,8 +30,6 @@ def convertCategories(menu_data):
 
     #Create dictionary mapping IDs to category then assign to userData
     categoriesID = dict(zip(menu_data['Item_ID'], item_categories.drop(columns=['Item_ID']).values))
-
-    print(f"CATEGORY ID: {categoriesID}\n\n")
-    return categoriesID
+    return categoriesID  #{User 1: array([ True, False, False, False, False, False, False, False])
 
 
