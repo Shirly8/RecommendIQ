@@ -1,33 +1,36 @@
-
+from sklearn.metrics import mean_squared_error
 import torch
-from DataLoader import loadData, convertCategories, convertDescriptions
-from LSTM_Model import train_LSTM
-from NCF_Model import train_NCF
-import numpy as np
-
-def main():
-    menuData, userData = loadData()
-
-    #Get the description and category tensor and send to LSTM Model
-    description_tensor = convertDescriptions(menuData)
-    lstm_model, description_features = train_LSTM(description_tensor)
-    torch.save(lstm_model.state_dict(), 'lstm_model.pth')
+from Eval_DataLoader import EvalDataset
+from torch.utils.data import DataLoader
 
 
-    #Map ItemIDs to LSTM features
-    itemIdToFeature = dict(zip(menuData['Item_ID'], description_features.detach().numpy()))
-    userData['LSTM_Features'] = userData['Item_ID'].map(itemIdToFeature)
-    LSTM_features = torch.tensor(np.array(userData['LSTM_Features'].tolist()), dtype=torch.float32)
+def evaluate(model, test_loader, k = 10):
+    model.eval()
+    model_predictions = []
+    actual_predictions = []
 
+    with torch.no_grad():
+        for data in test_loader:
+            userData, LSTMFeature, categorytensor, target = data
+            
+            result = model(userData, LSTMFeature, categorytensor)
+        
+            model_predictions.extend(result.cpu().numpy())
+            actual_predictions.extend(target.cpu().numpy)
 
-    # Map Item_IDs to Category features for each user interaction
-    categoriesID = convertCategories(menuData)
-    userData['Category_Features'] = userData['Item_ID'].map(categoriesID)
-    category_tensor = torch.tensor(np.array(userData['Category_Features'].tolist()), dtype=torch.float32)
-
-    #Train NCF Model
-    train_NCF(userData, LSTM_features, category_tensor)
-
+    rmse = mean_squared_error(actual_predictions, model_predictions, squared=False)
+    print(f'RMSE: {rmse}')
+    return rmse
 
 if __name__ == '__main__':
-    main()
+    
+    csv_file = 'eval_data.csv'
+    eval_dataset = EvalDataset(csv_file)
+    test_loader = DataLoader(eval_dataset, batch_size=32, shuffle=False)
+
+
+    model = torch.load('ncf_model.pth')  # Load your NCF model
+    evaluate(model, test_loader)
+
+
+
