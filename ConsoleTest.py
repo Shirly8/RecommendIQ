@@ -1,9 +1,9 @@
-
 import torch
 from DataLoader import loadData, convertCategories, convertDescriptions
 from LSTM_Model import train_LSTM
 from NCF_Model import train_NCF
 import numpy as np
+
 
 def main():
     menuData, userData = loadData()
@@ -27,7 +27,6 @@ def main():
 
     #Train NCF Model
     train_NCF(userData, LSTM_features, category_tensor)
-
 
 if __name__ == '__main__':
     main()
